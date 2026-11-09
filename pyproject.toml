@@ -1,0 +1,24 @@
+[build-system]
+requires = ["hatchling>=1.25"]
+build-backend = "hatchling.build"
+
+[project]
+name = "ocrpipe"
+version = "0.1.0"
+description = "Local, offline document extraction"
+requires-python = ">=3.11"
+dependencies = ["typer>=0.12,<1", "pydantic>=2,<3", "PyYAML>=6,<7", "pypdfium2>=4,<6", "Pillow>=10,<12", "opencv-python-headless>=4.8,<5", "numpy>=1.26,<3"]
+
+[project.optional-dependencies]
+ocr = ["paddleocr>=3,<4", "paddlepaddle>=3,<4"]
+trocr = ["transformers>=4.40,<6", "torch>=2,<3"]
+test = ["pytest>=8,<10"]
+
+[project.scripts]
+ocrpipe = "ocrpipe.cli:app"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/ocrpipe"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
