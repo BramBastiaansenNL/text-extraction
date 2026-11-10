@@ -1,4 +1,16 @@
-# ocrpipe
+# Local PDF extraction and review
+
+An early-stage, Windows-first tool for extracting text from PDFs and reviewing the results entirely on your computer. It is intended for varied forms, including scanned pages. The current schema suggestions require human confirmation.
+
+## Contents
+
+- [Quick start for colleagues](#quick-start-for-colleagues-windows)
+- [Local browser review](#local-browser-review)
+- [How extraction works](#how-extraction-works)
+- [Current capabilities and limits](#current-capabilities-and-limits)
+- [Privacy and output files](#privacy-and-output-files)
+- [Command-line use](#process-one-pdf-folder)
+- [Developer checks](#checks)
 
 ## Quick start for colleagues (Windows)
 
@@ -62,3 +74,33 @@ Outputs: `documents/*.json`, `markdown/*.md`, `unclassified.csv`, `review.html`,
 ```
 
 All project tests and the end-to-end OCR smoke test use synthetic data.
+
+## How extraction works
+
+1. Each PDF page is rendered to an image at 300 DPI by default. Page images are retained in the run for review.
+2. If the page has a usable embedded text layer, characters are grouped into lines. Otherwise, the local PP-OCRv5 model detects and reads text in the page image. The original reading, page, coordinates, and available confidence are retained.
+3. A line matching `label: value` becomes a field. If no fields are found on a page, the detected lines are retained as generic line fields. The page Markdown contains the complete detected line sequence.
+4. Fields are marked for review. Low OCR confidence adds a separate flag; confidence is a model estimate, not a measured guarantee of correctness. Bracket-like text and unexpected CJK characters receive review flags.
+5. Form grouping compares normalized field labels. Groups proposed in a run and labels saved under a user-confirmed form type support future suggestions. There is no trained document classifier or complete expected-field schema yet.
+6. The local web server renders the review page. Corrections update the document JSON and CSV, while an append-only audit log records changes and notes.
+
+The source code is in `src/ocrpipe/`: `pdf.py` renders pages, `readers.py` runs local OCR, `extract.py` identifies lines and fields, `pipeline.py` coordinates processing, `schema.py` proposes form groups, `output.py` writes results, and `web.py` serves the local interface. `cli.py` defines the commands.
+
+## Current capabilities and limits
+
+| Area | Current version |
+| --- | --- |
+| Embedded PDF text | Extracts text and coordinates when the text layer is usable. A text layer can still contain errors. |
+| Scanned text | Uses local PP-OCRv5; it has handled some sideways content, but rotation and reading order are not guaranteed. |
+| Fields | Recognizes simple `label: value` lines and keeps other lines for review. It cannot infer every field from arbitrary form layouts. |
+| Form types | Proposes groups from recurring labels and lets a user confirm a type. `unclassified` means no type has been confirmed. Blank and missing expected fields are not detected. |
+| Checkboxes | Flags some bracket-like text for review. Thin handwritten ticks are not reliably classified as checked or unchecked. |
+| Stamps and borders | Sideways text may be captured. Circular text, letters touching solid borders, and similar image artifacts can be missed or misread. |
+| Tables | Table structure extraction is not implemented. |
+| Review | Shows rendered pages, extracted lines, field crops, corrections, and notes. Corrections are local and audited. |
+
+## Privacy and output files
+
+The web server listens on `127.0.0.1`, so the review interface is accessible from the local computer. It does not load remote scripts or send document content to an external OCR service. **One-time setup downloads dependencies and model weights.** Runtime extraction has a network guard enabled by default.
+
+The `review-runs` folder is created next to this project by default. Each dated run stores copies of the input PDFs, rendered page images, JSON with line positions and field crops, page Markdown, CSV summaries, and `audit.jsonl`. `form-types.json` in the output root stores labels from confirmed form types. These files can contain sensitive information. Git excludes them through `.gitignore`; verify the contents before sharing any archive or output folder.
