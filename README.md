@@ -4,7 +4,7 @@ An early-stage, Windows-first tool for extracting text from PDFs and reviewing t
 
 ## Contents
 
-- [Quick start for colleagues](#quick-start-for-colleagues-windows)
+- [Quick start](#quick-start-windows)
 - [Local browser review](#local-browser-review)
 - [How extraction works](#how-extraction-works)
 - [Current capabilities and limits](#current-capabilities-and-limits)
@@ -12,7 +12,7 @@ An early-stage, Windows-first tool for extracting text from PDFs and reviewing t
 - [Command-line use](#process-one-pdf-folder)
 - [Developer checks](#checks)
 
-## Quick start for colleagues (Windows)
+## Quick start (Windows)
 
 1. Install **64-bit Python 3.11 or 3.12** and enable **Add Python to PATH** during installation.
 2. Double-click **Setup.cmd** in this folder. It creates a virtual environment, installs dependencies, and downloads the local OCR weights. Internet access is needed for this one-time step.
